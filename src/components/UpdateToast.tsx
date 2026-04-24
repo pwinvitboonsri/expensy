@@ -3,7 +3,7 @@ import { Download, X, Sparkles, Loader2 } from 'lucide-react';
 import { useUpdater } from '../hooks/useUpdater';
 
 const UpdateToast: React.FC = () => {
-  const { status, updateInfo, installUpdate, resetStatus } = useUpdater();
+  const { status, updateInfo, installUpdate } = useUpdater();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 

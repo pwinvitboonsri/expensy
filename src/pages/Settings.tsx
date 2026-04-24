@@ -21,7 +21,6 @@ import PasswordModal from "../components/PasswordModal";
 import UpdateAction from "../components/UpdateAction";
 
 const Settings: React.FC = () => {
-  const [tfaEnabled, setTfaEnabled] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
