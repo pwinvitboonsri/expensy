@@ -1,0 +1,45 @@
+# Node.js
+node_modules
+dist
+dist-ssr
+*.local
+*.log
+
+# Tauri / Rust
+src-tauri/target
+src-tauri/gen
+src-tauri/bin
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Security
+*.key
+*.pem
+*.p12
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
