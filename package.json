@@ -1,13 +1,15 @@
 {
   "name": "expensy",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
+    "t-dev": "tauri dev",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "update-manifest": "node scripts/update-manifest.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

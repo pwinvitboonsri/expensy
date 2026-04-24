@@ -1,15 +1,15 @@
 {
-    "version": "0.1.4",
+    "version": "v0.1.1",
     "notes": "Test update",
-    "pub_date": "2026-04-24T00:00:00Z",
+    "pub_date": "2026-04-24T16:29:26.966Z",
     "platforms": {
         "darwin-aarch64": {
-            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRQTBPWGRXUndBSTdoQWZCUnJZUHlGY2IrZDN2RnY1T2k0bVYrcjZLeU9UYVhOM1M1YUpoOVc0QkpVL0FiMkJQcG8raC9qY3VLeittS3lIS1N4bDhEcGZZSE9EK0VqT0E4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc3MDMxMDY2CWZpbGU6ZXhwZW5zeV8wLjEuMy50YXIuZ3oKOXVMOVIzY2VDWlJMbTJjR2NJOW12NlRLWlFwWGpZdmVpWUpuRVFqQ3FxUEpaWXJsWHM4ZDdoK0R3bllwOTVsQUNzWlZxYTZWNzVpaDk4NTVJbjlYQ0E9PQo=",
-            "url": "https://github.com/pwinvitboonsri/expensy/releases/download/v0.1.3/expensy_0.1.3.tar.gz"
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSUWhGdnY0RkNBNUE1T0xlc3IwSXFNMUZOMnZmTVp0K3N2TG80K2kzcVh0Y2Q5eFpLVTRhUk1PSkk1MEtYZHNIR0JPTHNWTEdlQVVjYW1sZDRPVlk0MWxtaWlNN0lVQXdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc3MDMzNzU5CWZpbGU6ZXhwZW5zeV8wLjEuNC50YXIuZ3oKeGRwZW0vU3krMGRVcU9nemdxamgyT1RxT1A0SEs5YmQ3eWpGbFpUYlk5TkhGTzlHMDBTUmdpQVh4K0M4ZUJyaS9jSU5RMjhibDFNZVo3NGhWSzlyQ3c9PQo=",
+            "url": "https://github.com/pwinvitboonsri/expensy/releases/download/v0.1.1/expensy_0.1.1_aarch64.tar.gz"
         },
         "windows-x86_64": {
-            "signature": "PLACEHOLDER",
-            "url": "https://github.com/pwinvitboonsri/expensy/releases/latest"
+            "signature": "MISSING_SIGNATURE",
+            "url": "https://github.com/pwinvitboonsri/expensy/releases/download/v0.1.1/expensy_0.1.1_x64_en-US.msi.zip"
         }
     }
 }
