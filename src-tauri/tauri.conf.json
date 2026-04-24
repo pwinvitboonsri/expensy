@@ -37,7 +37,7 @@
       "active": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU0ODA1MEUwRUY1Qjg0NTAKUldSUWhGdnY0RkNBNUxpYnFPNWh4Z1V3cXNSZUxKNjVsUHZlZWc5Yzl4SThPVHV3ell5blNueUYK",
       "endpoints": [
-        "https://raw.githubusercontent.com/bwinvitboonsri/expensy/main/update.json"
+        "https://raw.githubusercontent.com/pwinvitboonsri/expensy/dev/update.json"
       ]
     }
   }
