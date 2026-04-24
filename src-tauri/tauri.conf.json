@@ -14,10 +14,7 @@
       {
         "title": "expensy",
         "width": 800,
-        "height": 600,
-        "resizable": true,
-        "decorations": false,
-        "transparent": true
+        "height": 600
       }
     ],
     "security": {
