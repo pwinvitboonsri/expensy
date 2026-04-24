@@ -16,7 +16,7 @@ import { execSync } from 'child_process';
 // npm run update-manifest
 
 
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))``;
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const version = packageJson.version;
 const buildTag = `v${version}`;
 
