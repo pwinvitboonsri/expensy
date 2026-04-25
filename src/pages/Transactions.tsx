@@ -19,7 +19,7 @@ import DatePicker from "../components/DatePicker";
 const Transactions: React.FC = () => {
   const { transactions, categories, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Filter States
   const [showFilters, setShowFilters] = useState(false);
   const [activeType, setActiveType] = useState<string>("all");
@@ -28,7 +28,7 @@ const Transactions: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
-  
+
   const filterRef = useRef<HTMLDivElement>(null);
   const catDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -50,14 +50,14 @@ const Transactions: React.FC = () => {
   const filteredTransactions = transactions
     .filter(txn => {
       const matchesSearch = txn.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           txn.categories?.name.toLowerCase().includes(searchQuery.toLowerCase());
+        txn.categories?.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = activeType === "all" || txn.type === activeType;
       const matchesCategory = activeCategory === "all" || txn.category_id === activeCategory;
-      
+
       const txnDate = new Date(txn.transaction_date).getTime();
       const matchesStartDate = !startDate || txnDate >= new Date(startDate).getTime();
       const matchesEndDate = !endDate || txnDate <= new Date(endDate).getTime();
-      
+
       return matchesSearch && matchesType && matchesCategory && matchesStartDate && matchesEndDate;
     })
     .sort((a, b) => {
@@ -68,9 +68,9 @@ const Transactions: React.FC = () => {
       return 0;
     });
 
-  const activeFiltersCount = (activeType !== "all" ? 1 : 0) + 
-                             (activeCategory !== "all" ? 1 : 0) + 
-                             (startDate || endDate ? 1 : 0);
+  const activeFiltersCount = (activeType !== "all" ? 1 : 0) +
+    (activeCategory !== "all" ? 1 : 0) +
+    (startDate || endDate ? 1 : 0);
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 md:space-y-8">
@@ -89,15 +89,14 @@ const Transactions: React.FC = () => {
               />
             </div>
           </div>
-          
+
           <div className="relative" ref={filterRef}>
-            <button 
+            <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                showFilters || activeFiltersCount > 0 
-                  ? "bg-brand-emerald/5 border-brand-emerald text-brand-emerald" 
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${showFilters || activeFiltersCount > 0
+                  ? "bg-brand-emerald/5 border-brand-emerald text-brand-emerald"
                   : "bg-bg-surface border-border-subtle text-text-primary hover:bg-bg-main"
-              }`}
+                }`}
             >
               <Filter className="w-4 h-4" />
               Filters
@@ -110,14 +109,14 @@ const Transactions: React.FC = () => {
 
             {/* Filter Popover */}
             {showFilters && (
-              <div className="absolute top-full mt-3 left-0 w-72 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[60] animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="fixed inset-x-4 top-[20%] sm:absolute sm:inset-auto sm:top-full sm:mt-3 sm:right-0 sm:w-80 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[60] animate-in fade-in zoom-in duration-300">
                 <div className="p-4 border-b border-border-subtle flex items-center justify-between bg-bg-main/20 rounded-t-2xl">
                   <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Architecture Filter</span>
                   <button onClick={() => setShowFilters(false)} className="p-1 hover:bg-bg-main rounded-md transition-colors">
                     <X className="w-3 h-3 text-text-muted" />
                   </button>
                 </div>
-                
+
                 <div className="p-5 space-y-6">
                   {/* Type Filter */}
                   <div className="space-y-3">
@@ -127,9 +126,8 @@ const Transactions: React.FC = () => {
                         <button
                           key={type}
                           onClick={() => setActiveType(type)}
-                          className={`flex-1 py-1.5 text-[9px] font-bold uppercase rounded-lg transition-all ${
-                            activeType === type ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-                          }`}
+                          className={`flex-1 py-1.5 text-[9px] font-bold uppercase rounded-lg transition-all ${activeType === type ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
+                            }`}
                         >
                           {type}
                         </button>
@@ -162,9 +160,8 @@ const Transactions: React.FC = () => {
                                 setActiveCategory("all");
                                 setIsCatDropdownOpen(false);
                               }}
-                              className={`w-full flex items-center px-3 py-2 text-xs font-bold transition-colors ${
-                                activeCategory === "all" ? "text-brand-emerald bg-brand-emerald/5" : "text-text-secondary hover:text-text-primary hover:bg-bg-main"
-                              }`}
+                              className={`w-full flex items-center px-3 py-2 text-xs font-bold transition-colors ${activeCategory === "all" ? "text-brand-emerald bg-brand-emerald/5" : "text-text-secondary hover:text-text-primary hover:bg-bg-main"
+                                }`}
                             >
                               All Sectors
                             </button>
@@ -175,9 +172,8 @@ const Transactions: React.FC = () => {
                                   setActiveCategory(cat.id);
                                   setIsCatDropdownOpen(false);
                                 }}
-                                className={`w-full flex items-center px-3 py-2 text-xs font-bold transition-colors ${
-                                  activeCategory === cat.id ? "text-brand-emerald bg-brand-emerald/5" : "text-text-secondary hover:text-text-primary hover:bg-bg-main"
-                                }`}
+                                className={`w-full flex items-center px-3 py-2 text-xs font-bold transition-colors ${activeCategory === cat.id ? "text-brand-emerald bg-brand-emerald/5" : "text-text-secondary hover:text-text-primary hover:bg-bg-main"
+                                  }`}
                               >
                                 {cat.name}
                               </button>
@@ -194,7 +190,7 @@ const Transactions: React.FC = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <span className="text-[8px] font-bold text-text-muted uppercase ml-1">Start</span>
-                        <DatePicker 
+                        <DatePicker
                           value={startDate}
                           onChange={setStartDate}
                           placeholder="Select date"
@@ -203,7 +199,7 @@ const Transactions: React.FC = () => {
                       </div>
                       <div className="space-y-1.5">
                         <span className="text-[8px] font-bold text-text-muted uppercase ml-1">End</span>
-                        <DatePicker 
+                        <DatePicker
                           value={endDate}
                           onChange={setEndDate}
                           placeholder="Select date"
@@ -224,9 +220,8 @@ const Transactions: React.FC = () => {
                         <button
                           key={item.id}
                           onClick={() => setSortBy(item.id)}
-                          className={`flex items-center justify-between p-2.5 rounded-xl text-[10px] font-bold transition-all ${
-                            sortBy === item.id ? "bg-brand-emerald/10 text-brand-emerald" : "bg-bg-main/50 text-text-secondary hover:bg-bg-main"
-                          }`}
+                          className={`flex items-center justify-between p-2.5 rounded-xl text-[10px] font-bold transition-all ${sortBy === item.id ? "bg-brand-emerald/10 text-brand-emerald" : "bg-bg-main/50 text-text-secondary hover:bg-bg-main"
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <item.icon className="w-3 h-3" />
@@ -240,7 +235,7 @@ const Transactions: React.FC = () => {
                 </div>
 
                 <div className="p-4 bg-bg-main/20 border-t border-border-subtle">
-                  <button 
+                  <button
                     onClick={() => {
                       setActiveType("all");
                       setActiveCategory("all");
@@ -316,8 +311,8 @@ const Transactions: React.FC = () => {
                   </td>
                   <td className="px-6 md:px-8 py-4 md:py-6">
                     <span className={`text-[10px] px-3 py-1.5 rounded-lg font-bold tracking-wider uppercase transition-all ${txn.type === "income"
-                        ? "bg-brand-emerald text-white shadow-lg shadow-emerald-500/10"
-                        : "bg-bg-main text-text-secondary"
+                      ? "bg-brand-emerald text-white shadow-lg shadow-emerald-500/10"
+                      : "bg-bg-main text-text-secondary"
                       }`}>
                       {txn.categories?.name || "General"}
                     </span>

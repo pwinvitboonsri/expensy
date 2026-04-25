@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { check } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
 import { getVersion } from '@tauri-apps/api/app';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'error' | 'uptodate';
 

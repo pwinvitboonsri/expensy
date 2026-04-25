@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   setIsCollapsed
 }) => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   
   const menuItems = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -133,9 +133,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className={`flex-1 min-w-0 transition-all duration-300 ${isCollapsed ? "opacity-0 w-0 absolute" : "opacity-100"}`}>
             <p className="text-sm font-bold text-text-primary truncate group-hover:text-brand-emerald transition-colors">
-              {profile?.full_name || "Alex Sterling"}
+              {profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Expensy User"}
             </p>
-            <p className="text-[10px] text-text-secondary font-medium uppercase tracking-wider">Premium</p>
+            <p className="text-[10px] text-text-secondary font-medium truncate tracking-tight lowercase">
+              {user?.email || "architect@expensy.app"}
+            </p>
           </div>
 
           {/* Tooltip for collapsed state */}

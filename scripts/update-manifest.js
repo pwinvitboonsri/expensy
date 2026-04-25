@@ -37,21 +37,21 @@ const platforms = [
     {
         key: 'darwin-aarch64',
         dirs: ['src-tauri/target/release/bundle/macos'],
-        pattern: '', // match any .tar.gz
+        pattern: version, // match only current version .tar.gz
         binaryExt: '.tar.gz',
         url: `https://github.com/pwinvitboonsri/expensy/releases/download/${buildTag}/expensy_${version}_aarch64.tar.gz`
     },
     {
         key: 'darwin-x86_64',
         dirs: ['src-tauri/target/release/bundle/macos'],
-        pattern: '', // match any .tar.gz
+        pattern: version, // match only current version .tar.gz
         binaryExt: '.tar.gz',
         url: `https://github.com/pwinvitboonsri/expensy/releases/download/${buildTag}/expensy_${version}_x64.tar.gz`
     },
     {
         key: 'windows-x86_64',
         dirs: ['src-tauri/target/release/bundle/msi', 'src-tauri/target/release/bundle/nsis'],
-        pattern: `x64`,
+        pattern: version, // match only current version .msi.zip
         binaryExt: '.msi.zip',
         url: `https://github.com/pwinvitboonsri/expensy/releases/download/${buildTag}/expensy_${version}_x64_en-US.msi.zip`
     }

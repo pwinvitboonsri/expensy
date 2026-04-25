@@ -192,7 +192,7 @@ const Budgets: React.FC = () => {
             <div className="relative" ref={filterRef}>
               <button 
                 onClick={() => setShowFilters(!showFilters)}
-                className={`w-full sm:w-auto p-3.5 rounded-xl transition-all flex items-center justify-center border ${
+                className={`p-3.5 rounded-xl transition-all flex items-center justify-center border ${
                   showFilters || activeFiltersCount > 0 
                     ? "bg-brand-emerald/5 border-brand-emerald text-brand-emerald" 
                     : "bg-bg-main border-transparent hover:bg-bg-main/80 text-text-secondary"
@@ -208,7 +208,7 @@ const Budgets: React.FC = () => {
 
               {/* Filter Popover */}
               {showFilters && (
-                <div className="absolute top-full mt-3 right-0 w-72 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[60] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="fixed inset-x-4 top-[20%] sm:absolute sm:inset-auto sm:top-full sm:mt-3 sm:right-0 sm:w-80 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[60] animate-in fade-in zoom-in duration-300">
                   <div className="p-4 border-b border-border-subtle flex items-center justify-between bg-bg-main/20 rounded-t-2xl">
                     <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Ledger Filter</span>
                     <button onClick={() => setShowFilters(false)} className="p-1 hover:bg-bg-main rounded-md transition-colors">

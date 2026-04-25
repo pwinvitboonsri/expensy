@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabase";
-import { ShieldCheck, Loader2, HelpCircle, Sun, Moon } from "lucide-react";
+import { ShieldCheck, Loader2, HelpCircle, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 
 // Social Icon Components
@@ -21,14 +21,18 @@ const AppleIcon = () => (
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { Mail, ArrowLeft, ExternalLink } from "lucide-react";
 
 const LoginPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [isSignIn, setIsSignIn] = useState(true);
+  const [isVerifyMode, setIsVerifyMode] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,12 +48,42 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError(null);
     
-    const { error } = isSignIn 
+    const { data, error } = isSignIn 
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
 
-    if (error) setError(error.message);
-    setLoading(false);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      // If we have a session, navigate immediately
+      if (data?.session) {
+        navigate("/dashboard");
+      } else if (data?.user && !isSignIn) {
+        // Success but no session means email verification is required
+        setIsVerifyMode(true);
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleOpenEmail = async () => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    let url = "";
+    
+    if (domain?.includes('gmail')) url = 'https://mail.google.com';
+    else if (domain?.includes('outlook') || domain?.includes('hotmail') || domain?.includes('live')) url = 'https://outlook.live.com';
+    else if (domain?.includes('yahoo')) url = 'https://mail.yahoo.com';
+    else if (domain?.includes('icloud')) url = 'https://www.icloud.com/mail';
+    else url = `https://${domain || 'gmail.com'}`; // Generic fallback
+
+    try {
+      await openUrl(url);
+    } catch (err) {
+      console.error("Failed to open email:", err);
+    }
   };
 
   return (
@@ -75,112 +109,161 @@ const LoginPage: React.FC = () => {
       <main className="flex-1 flex flex-col items-center justify-center -mt-12 px-4">
         {/* Auth Card */}
         <div className="w-full max-w-[420px] bg-bg-surface rounded-3xl shadow-xl shadow-black/5 border border-border-subtle overflow-hidden mb-8 transition-colors">
-          {/* Tabs */}
-          <div className="p-4">
-            <div className="bg-bg-main p-1 rounded-xl flex">
-              <button 
-                onClick={() => setIsSignIn(true)}
-                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                  isSignIn ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-                }`}
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={() => setIsSignIn(false)}
-                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                  !isSignIn ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-                }`}
-              >
-                Create Account
-              </button>
+          {isVerifyMode ? (
+            <div className="px-8 py-12 text-center animate-in fade-in zoom-in duration-500">
+              <div className="w-20 h-20 bg-brand-emerald/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+                <Mail className="w-10 h-10 text-brand-emerald" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-brand-emerald text-white rounded-full flex items-center justify-center border-4 border-bg-surface">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                </div>
+              </div>
+              
+              <h1 className="text-2xl font-extrabold mb-4 tracking-tight">Check your inbox</h1>
+              <p className="text-text-secondary text-sm mb-10 leading-relaxed">
+                We've sent a verification link to <span className="text-text-primary font-bold">{email}</span>. 
+                Please activate your ledger to proceed.
+              </p>
+
+              <div className="space-y-4">
+                <button
+                  onClick={handleOpenEmail}
+                  className="w-full bg-brand-emerald hover:bg-brand-emerald-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open Webmail
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setIsVerifyMode(false);
+                    setIsSignIn(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-bold text-text-muted hover:text-text-primary py-2 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back to Sign In
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div className="px-8 pb-12 pt-4">
-            <h1 className="text-2xl font-extrabold mb-2 tracking-tight">
-              {isSignIn ? "Welcome back" : "Get started"}
-            </h1>
-            <p className="text-text-secondary text-sm mb-8 leading-relaxed">
-              {isSignIn 
-                ? "Enter your credentials to access your ledger."
-                : "Create a new ledger to track your financial precision."
-              }
-            </p>
-
-            <form onSubmit={handleAuth} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 ml-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-bg-main border border-transparent rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-brand-emerald/10 focus:border-brand-emerald outline-none transition-all placeholder:text-text-muted text-text-primary"
-                  placeholder="name@company.com"
-                  required
-                />
+          ) : (
+            <>
+              {/* Tabs */}
+              <div className="p-4">
+                <div className="bg-bg-main p-1 rounded-xl flex">
+                  <button 
+                    onClick={() => setIsSignIn(true)}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      isSignIn ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    onClick={() => setIsSignIn(false)}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      !isSignIn ? "bg-bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2 ml-1">
-                  <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-                    Password
-                  </label>
-                  {isSignIn && (
-                    <a href="#" className="text-[10px] font-bold text-brand-emerald hover:underline uppercase tracking-wider">
-                      Forgot?
-                    </a>
+              <div className="px-8 pb-12 pt-4">
+                <h1 className="text-2xl font-extrabold mb-2 tracking-tight">
+                  {isSignIn ? "Welcome back" : "Get started"}
+                </h1>
+                <p className="text-text-secondary text-sm mb-8 leading-relaxed">
+                  {isSignIn 
+                    ? "Enter your credentials to access your ledger."
+                    : "Create a new ledger to track your financial precision."
+                  }
+                </p>
+
+                <form onSubmit={handleAuth} className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 ml-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-bg-main border border-transparent rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-brand-emerald/10 focus:border-brand-emerald outline-none transition-all placeholder:text-text-muted text-text-primary"
+                      placeholder="name@company.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2 ml-1">
+                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                        Password
+                      </label>
+                      {isSignIn && (
+                        <a href="#" className="text-[10px] font-bold text-brand-emerald hover:underline uppercase tracking-wider">
+                          Forgot?
+                        </a>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-bg-main border border-transparent rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-brand-emerald/10 focus:border-brand-emerald outline-none transition-all placeholder:text-text-muted text-text-primary pr-12"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors p-1"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-500/10 text-red-500 p-3.5 rounded-xl text-xs font-bold border border-red-500/10">
+                      {error}
+                    </div>
                   )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-brand-emerald hover:bg-brand-emerald-dark disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignIn ? "Sign In" : "Create Account")}
+                  </button>
+                </form>
+
+                <div className="relative my-8">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border-subtle opacity-50"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-bg-surface px-4 text-[10px] font-bold text-text-muted tracking-[0.2em]">
+                      Or continue with
+                    </span>
+                  </div>
                 </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-bg-main border border-transparent rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-brand-emerald/10 focus:border-brand-emerald outline-none transition-all placeholder:text-text-muted text-text-primary"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
 
-              {error && (
-                <div className="bg-red-500/10 text-red-500 p-3.5 rounded-xl text-xs font-bold border border-red-500/10">
-                  {error}
+                <div className="grid grid-cols-2 gap-4">
+                  <button className="flex items-center justify-center py-3.5 px-4 rounded-xl border border-border-subtle hover:bg-bg-main transition-all text-sm font-bold text-text-primary">
+                    <GoogleIcon />
+                    Google
+                  </button>
+                  <button className="flex items-center justify-center py-3.5 px-4 rounded-xl border border-border-subtle hover:bg-bg-main transition-all text-sm font-bold text-text-primary">
+                    <AppleIcon />
+                    Apple
+                  </button>
                 </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-brand-emerald hover:bg-brand-emerald-dark disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignIn ? "Sign In" : "Create Account")}
-              </button>
-            </form>
-
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border-subtle opacity-50"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-bg-surface px-4 text-[10px] font-bold text-text-muted tracking-[0.2em]">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center py-3.5 px-4 rounded-xl border border-border-subtle hover:bg-bg-main transition-all text-sm font-bold text-text-primary">
-                <GoogleIcon />
-                Google
-              </button>
-              <button className="flex items-center justify-center py-3.5 px-4 rounded-xl border border-border-subtle hover:bg-bg-main transition-all text-sm font-bold text-text-primary">
-                <AppleIcon />
-                Apple
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         {/* Security Info */}
