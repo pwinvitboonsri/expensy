@@ -3,9 +3,6 @@ import {
   ArrowUpRight,
   Sparkles,
   ArrowDownLeft,
-  Target,
-  MoreHorizontal,
-  Info,
   UtensilsCrossed,
   Car,
   ShoppingBag,
@@ -15,9 +12,7 @@ import {
   Tag,
   Plus,
   Lock,
-  Zap,
-  Calendar as CalendarIcon,
-  ChevronDown
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutletContext } from "react-router-dom";

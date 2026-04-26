@@ -3,7 +3,6 @@ import {
   Search,
   Filter,
   Download,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -58,7 +57,6 @@ const Transactions: React.FC = () => {
       if (filterType === 'month') {
         const [year, month] = selectedMonth.split('-').map(Number);
         // Start of month
-        const start = new Date(year, month - 1, 1);
         const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
         
         // End of month
