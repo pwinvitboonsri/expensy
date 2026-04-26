@@ -95,7 +95,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder, a
       </button>
 
       {isOpen && (
-        <div className={`absolute ${side === "right" ? "top-0 left-full ml-4" : `top-full mt-2 ${align === "right" ? "right-0" : "left-0"}`} w-64 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[80] p-4 animate-in fade-in zoom-in slide-in-from-left-2 duration-200`}>
+        <div className={`absolute ${side === "right" ? "top-0 left-full ml-4" : `top-full mt-2 ${align === "right" ? "right-0" : "left-0"}`} w-64 bg-bg-surface border border-border-subtle rounded-2xl shadow-2xl z-[100] p-4 animate-in fade-in zoom-in slide-in-from-left-2 duration-200`}>
           <div className="flex items-center justify-between mb-4">
             <button onClick={handlePrevMonth} className="p-1 hover:bg-bg-main rounded-lg transition-colors">
               <ChevronLeft className="w-3.5 h-3.5 text-text-secondary" />

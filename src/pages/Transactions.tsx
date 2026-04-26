@@ -10,14 +10,18 @@ import {
   X,
   ArrowUpDown,
   Calendar,
-  Check
+  Check,
+  Edit3,
+  Trash2
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-
+import { useOutletContext, useLocation } from "react-router-dom";
 import DatePicker from "../components/DatePicker";
 
 const Transactions: React.FC = () => {
-  const { transactions, categories, loading } = useAuth();
+  const { transactions, categories, loading, deleteTransaction } = useAuth();
+  const { openEditModal } = useOutletContext<any>();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter States
@@ -46,6 +50,43 @@ const Transactions: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Apply filters from navigation state
+  useEffect(() => {
+    if (location.state) {
+      const { filterType, selectedMonth, startDate: sDate, endDate: eDate } = location.state;
+      if (filterType === 'month') {
+        const [year, month] = selectedMonth.split('-').map(Number);
+        // Start of month
+        const start = new Date(year, month - 1, 1);
+        const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+        
+        // End of month
+        const end = new Date(year, month, 0);
+        const endStr = `${year}-${String(month).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+        
+        setStartDate(startStr);
+        setEndDate(endStr);
+      } else {
+        setStartDate(sDate || "");
+        setEndDate(eDate || "");
+      }
+      // If we have any filters, show the panel so user sees what's applied
+      if (filterType || sDate || eDate) {
+        setShowFilters(true);
+      }
+    }
+  }, [location.state]);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this architectural entry? This action cannot be reversed.")) {
+      try {
+        await deleteTransaction(id);
+      } catch (err) {
+        alert("Failed to delete transaction");
+      }
+    }
+  };
 
   const filteredTransactions = transactions
     .filter(txn => {
@@ -268,8 +309,8 @@ const Transactions: React.FC = () => {
                 <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] w-[20%]">Timeline / Reference</th>
                 <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Classification & Details</th>
                 <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Sector</th>
-                <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Fulfillment</th>
                 <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] text-right">Amount (USD)</th>
+                <th className="px-6 md:px-8 py-5 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] text-right w-[100px]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -280,7 +321,7 @@ const Transactions: React.FC = () => {
                   </td>
                 </tr>
               ) : filteredTransactions.length > 0 ? filteredTransactions.map((txn) => (
-                <tr key={txn.id} className="group hover:bg-bg-main/50 transition-all border-b border-border-subtle last:border-0">
+                <tr key={txn.id} className="group hover:bg-bg-main/50 transition-all border-b border-border-subtle last:border-0 relative">
                   <td className="px-6 md:px-8 py-4 md:py-6">
                     <p className="text-sm font-bold text-text-primary">
                       {new Date(txn.transaction_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -317,16 +358,28 @@ const Transactions: React.FC = () => {
                       {txn.categories?.name || "General"}
                     </span>
                   </td>
-                  <td className="px-6 md:px-8 py-4 md:py-6">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-brand-emerald" />
-                      <span className="text-[11px] font-bold text-text-primary">Verified</span>
-                    </div>
-                  </td>
                   <td className="px-6 md:px-8 py-4 md:py-6 text-right">
                     <p className={`text-sm font-extrabold tracking-tight ${txn.type === "income" ? "text-brand-emerald" : "text-red-500"}`}>
                       {txn.type === "income" ? "+" : "-"}฿{Math.abs(txn.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
+                  </td>
+                  <td className="px-6 md:px-8 py-4 md:py-6 text-right">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => openEditModal(txn)}
+                        className="p-2 hover:bg-bg-main rounded-lg text-text-muted hover:text-brand-emerald transition-colors"
+                        title="Edit Entry"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(txn.id)}
+                        className="p-2 hover:bg-bg-main rounded-lg text-text-muted hover:text-red-500 transition-colors"
+                        title="Delete Entry"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )) : (

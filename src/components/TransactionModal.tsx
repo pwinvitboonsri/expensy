@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  transaction?: any; // Optional transaction for editing
 }
 
 const getCategoryIcon = (name: string) => {
@@ -19,7 +20,7 @@ const getCategoryIcon = (name: string) => {
   return Tag;
 };
 
-const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) => {
+const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, transaction }) => {
   const { user, categories, refreshTransactions } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpense, setIsExpense] = useState(true);
@@ -34,16 +35,36 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Populate form if editing
+  useEffect(() => {
+    if (transaction) {
+      setIsExpense(transaction.type === "expense");
+      setAmount(transaction.amount.toString());
+      setCategoryId(transaction.category_id);
+      setDate(transaction.transaction_date);
+      setTags(transaction.tags || []);
+      setNotes(transaction.note || "");
+    } else {
+      // Reset form for new transaction
+      setIsExpense(true);
+      setAmount("0.00");
+      setCategoryId("");
+      setDate(new Date().toISOString().split("T")[0]);
+      setTags(["Dinner", "Date Night"]);
+      setNotes("");
+    }
+  }, [transaction, isOpen]);
+
   // Filter categories by type
   const filteredCategories = categories.filter(c => c.type === (isExpense ? 'expense' : 'income'));
-  const selectedCategory = categories.find(c => c.id === categoryId) || filteredCategories[0];
+  const selectedCategory = categories.find(c => c.id === categoryId) || (filteredCategories.length > 0 ? filteredCategories[0] : null);
 
-  // Initialize category
+  // Initialize category for new transactions
   useEffect(() => {
-    if (filteredCategories.length > 0 && !categoryId) {
+    if (!transaction && filteredCategories.length > 0 && !categoryId) {
       setCategoryId(filteredCategories[0].id);
     }
-  }, [filteredCategories, categoryId]);
+  }, [filteredCategories, categoryId, transaction]);
 
   // Handle outside click to close dropdown
   useEffect(() => {
@@ -76,21 +97,37 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .insert([
-          {
-            user_id: user.id,
+      if (transaction) {
+        // Update existing
+        const { error } = await supabase
+          .from("transactions")
+          .update({
             amount: parseFloat(amount),
             type: isExpense ? "expense" : "income",
             category_id: categoryId,
             tags: tags,
             note: notes,
             transaction_date: date,
-          }
-        ]);
-
-      if (error) throw error;
+          })
+          .eq("id", transaction.id);
+        if (error) throw error;
+      } else {
+        // Insert new
+        const { error } = await supabase
+          .from("transactions")
+          .insert([
+            {
+              user_id: user.id,
+              amount: parseFloat(amount),
+              type: isExpense ? "expense" : "income",
+              category_id: categoryId,
+              tags: tags,
+              note: notes,
+              transaction_date: date,
+            }
+          ]);
+        if (error) throw error;
+      }
       
       await refreshTransactions();
       onClose();
@@ -125,7 +162,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) 
             <X className="w-5 h-5 text-text-secondary" />
           </button>
           <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
-            New Transaction
+            {transaction ? "Edit Transaction" : "New Transaction"}
           </span>
           <div className="w-9" /> {/* Spacer */}
         </div>
@@ -300,10 +337,17 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) 
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <>
-                <Plus className="w-5 h-5" />
-                Add {selectedCategory?.name || "Entry"}
-              </>
+              transaction ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Update Entry
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5" />
+                  Add {selectedCategory?.name || "Entry"}
+                </>
+              )
             )}
           </button>
         </div>

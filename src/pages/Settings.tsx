@@ -257,14 +257,16 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Software Infrastructure */}
-      <section className="space-y-6">
-        <div className="px-1 md:px-0">
-          <h2 className="text-2xl font-bold text-text-primary">Software Infrastructure</h2>
-          <p className="text-sm text-text-secondary mt-1">Manage system updates and architectural versioning.</p>
-        </div>
-        <UpdateAction />
-      </section>
+      {/* 4. Software Infrastructure (Desktop Only) */}
+      {typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ && (
+        <section className="space-y-6">
+          <div className="px-1 md:px-0">
+            <h2 className="text-2xl font-bold text-text-primary">Software Infrastructure</h2>
+            <p className="text-sm text-text-secondary mt-1">Manage system updates and architectural versioning.</p>
+          </div>
+          <UpdateAction />
+        </section>
+      )}
 
       {/* 5. Data Management */}
       <section className="space-y-6">

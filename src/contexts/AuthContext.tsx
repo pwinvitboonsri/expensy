@@ -41,6 +41,7 @@ interface AuthContextType {
   loading: boolean;
   refreshCategories: () => Promise<void>;
   refreshTransactions: () => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -90,6 +91,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTransactions(data || []);
   };
 
+  const deleteTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      await refreshTransactions();
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+      throw err;
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -132,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loading, 
       refreshCategories,
       refreshTransactions,
+      deleteTransaction,
       signOut
     }}>
       {children}
