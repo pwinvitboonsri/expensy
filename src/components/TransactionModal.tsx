@@ -29,7 +29,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tags, setTags] = useState(["Dinner", "Date Night"]);
   const [newTag, setNewTag] = useState("");
-  const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState("");
   
   // Custom Dropdown State
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -43,7 +43,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
       setCategoryId(transaction.category_id);
       setDate(transaction.transaction_date);
       setTags(transaction.tags || []);
-      setNotes(transaction.note || "");
+      setDescription(transaction.description || "");
     } else {
       // Reset form for new transaction
       setIsExpense(true);
@@ -51,7 +51,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
       setCategoryId("");
       setDate(new Date().toISOString().split("T")[0]);
       setTags(["Dinner", "Date Night"]);
-      setNotes("");
+      setDescription("");
     }
   }, [transaction, isOpen]);
 
@@ -106,7 +106,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
             type: isExpense ? "expense" : "income",
             category_id: categoryId,
             tags: tags,
-            note: notes,
+            description: description,
             transaction_date: date,
           })
           .eq("id", transaction.id);
@@ -122,7 +122,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
               type: isExpense ? "expense" : "income",
               category_id: categoryId,
               tags: tags,
-              note: notes,
+              description: description,
               transaction_date: date,
             }
           ]);
@@ -134,7 +134,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
       
       // Reset form
       setAmount("0.00");
-      setNotes("");
+      setDescription("");
       setTags(["Dinner", "Date Night"]);
     } catch (err) {
       console.error("Error creating transaction:", err);
@@ -316,9 +316,9 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
               </label>
               <div className="relative">
                 <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Enter transaction details..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Architecture of the transaction..."
                   className="w-full bg-bg-main border-none rounded-2xl py-4 pt-4 px-4 h-24 md:h-32 text-sm font-medium text-text-primary focus:ring-2 focus:ring-brand-emerald/10 outline-none resize-none placeholder:text-text-muted"
                 />
               </div>

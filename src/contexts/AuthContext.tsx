@@ -26,7 +26,7 @@ interface Transaction {
   amount: number;
   type: 'income' | 'expense';
   tags: string[];
-  note: string;
+  description: string;
   transaction_date: string;
   created_at: string;
   categories?: Category; // Joined data

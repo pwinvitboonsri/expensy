@@ -88,7 +88,7 @@ const Transactions: React.FC = () => {
 
   const filteredTransactions = transactions
     .filter(txn => {
-      const matchesSearch = txn.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = txn.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         txn.categories?.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = activeType === "all" || txn.type === activeType;
       const matchesCategory = activeCategory === "all" || txn.category_id === activeCategory;
@@ -336,7 +336,7 @@ const Transactions: React.FC = () => {
                       <div>
                         <h4 className="text-sm font-bold text-text-primary">{txn.categories?.name || "Unclassified"}</h4>
                         <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
-                          <p className="text-[10px] font-bold text-text-muted uppercase line-clamp-1">{txn.note || "No additional notes"}</p>
+                          <p className="text-[10px] font-bold text-text-muted uppercase line-clamp-1">{txn.description || "No description"}</p>
                           <div className="hidden sm:flex items-center gap-2">
                             {txn.tags?.map(tag => (
                               <span key={tag} className="text-[10px] bg-bg-main text-text-secondary px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap">
