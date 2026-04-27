@@ -42,6 +42,8 @@ interface AuthContextType {
   refreshCategories: () => Promise<void>;
   refreshTransactions: () => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  addCategory: (name: string, limit: number) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -105,6 +107,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const addCategory = async (name: string, limit: number) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("categories")
+        .insert({
+          user_id: user.id,
+          name,
+          monthly_limit: limit,
+          type: 'expense',
+          is_default: false
+        });
+      if (error) throw error;
+      await refreshCategories();
+    } catch (err) {
+      console.error("Error adding category:", err);
+      throw err;
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("categories")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      await refreshCategories();
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      throw err;
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -148,6 +184,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refreshCategories,
       refreshTransactions,
       deleteTransaction,
+      addCategory,
+      deleteCategory,
       signOut
     }}>
       {children}
