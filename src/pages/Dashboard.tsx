@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   UtensilsCrossed,
   Car,
@@ -12,11 +12,13 @@ import {
   Calendar as CalendarIcon,
   Trash2,
   Settings2,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Line, Bar } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { motion, AnimatePresence } from "framer-motion";
 import "../utils/ChartSetup";
 import DatePicker from "../components/DatePicker";
@@ -38,8 +40,8 @@ const getCategoryIcon = (name: string) => {
 const TransactionItem = ({ icon: Icon, title, category, time, amount, status, isPositive }: any) => (
   <div className="flex items-center justify-between py-5 border-b border-border-subtle last:border-0 group hover:bg-bg-main/50 transition-colors px-4 -mx-4 rounded-xl">
     <div className="flex items-center gap-4">
-      <div className="bg-bg-main p-3.5 rounded-2xl">
-        <Icon className="w-5 h-5 text-text-primary" />
+      <div className={`p-3.5 rounded-2xl ${isPositive ? "bg-brand-emerald/10 text-brand-emerald" : "bg-[#f43f5e]/10 text-[#f43f5e]"}`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div>
         <h4 className="text-sm font-bold text-text-primary">{title}</h4>
@@ -52,7 +54,7 @@ const TransactionItem = ({ icon: Icon, title, category, time, amount, status, is
       </div>
     </div>
     <div className="text-right">
-      <p className={`text-sm font-extrabold ${isPositive ? "text-brand-emerald" : "text-text-primary"}`}>
+      <p className={`text-sm font-extrabold ${isPositive ? "text-brand-emerald" : "text-[#f43f5e]"}`}>
         {isPositive ? "+" : "-"}฿{Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
       </p>
       <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider mt-1">{status}</p>
@@ -71,15 +73,16 @@ const Skeleton = ({ className }: { className: string }) => (
 );
 
 
-const SectorDistribution = ({ labels, values, limits }: any) => {
+const SectorDistribution = ({ labels, values, limits, types }: any) => {
   const data = {
     labels,
     datasets: [
       {
         label: 'Spending',
         data: values,
-        backgroundColor: values.map((v: number, i: number) => {
-          return v > limits[i] ? 'rgba(239, 68, 68, 0.8)' : 'rgba(0, 135, 90, 0.8)';
+        backgroundColor: values.map((_v: number, i: number) => {
+          if (types && types[i] === 'income') return '#10b981';
+          return '#fb7185'; // Always use Rose for Expenses
         }),
         borderRadius: 8,
         barThickness: 20,
@@ -125,7 +128,7 @@ const SectorDistribution = ({ labels, values, limits }: any) => {
         border: { display: false },
         ticks: {
           font: { size: 11, weight: 900 },
-          color: 'rgba(0, 135, 90, 1)',
+          color: '#10b981',
           padding: 20,
           callback: (_value: any, index: number) => {
             const val = values[index];
@@ -149,6 +152,240 @@ const SectorDistribution = ({ labels, values, limits }: any) => {
   return (
     <div className="h-[600px] w-full p-4 overflow-y-auto scrollbar-hide">
       <Bar data={data} options={options as any} />
+    </div>
+  );
+};
+
+const CategoryStackFlow = ({ labels, datasets }: any) => {
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        align: 'end' as const,
+        labels: {
+          boxWidth: 8,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: { size: 10, weight: 700, family: 'Inter' },
+          color: 'rgba(0, 0, 0, 0.4)',
+          padding: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#000',
+        titleFont: { size: 12, weight: 900 },
+        bodyColor: '#666',
+        bodyFont: { size: 11, weight: 600 },
+        borderColor: 'rgba(0, 0, 0, 0.05)',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        filter: (tooltipItem: any) => tooltipItem.raw > 0,
+        callbacks: {
+          label: (context: any) => {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            if (context.parsed.y !== null) {
+              label += new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(context.parsed.y);
+            }
+            return label;
+          },
+          footer: (tooltipItems: any) => {
+            let income = 0;
+            let expense = 0;
+            tooltipItems.forEach((item: any) => {
+              if (item.dataset.categoryType === 'income') income += item.parsed.y;
+              else expense += item.parsed.y;
+            });
+            return [
+              `Total Inflow: ฿${income.toLocaleString()}`,
+              `Total Outflow: ฿${expense.toLocaleString()}`
+            ];
+          }
+        },
+        footerColor: '#475569',
+        footerFont: { size: 12, weight: 900 },
+        footerSpacing: 8,
+        footerMarginTop: 10,
+      }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index' as const,
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          font: { size: 10, weight: 700 },
+          color: 'rgba(0, 0, 0, 0.3)',
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 12
+        }
+      },
+      y: {
+        stacked: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.03)',
+          drawBorder: false
+        },
+        border: { display: false },
+        ticks: {
+          font: { size: 10, weight: 700 },
+          color: 'rgba(0, 0, 0, 0.3)',
+          callback: (value: any) => `฿${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="h-[400px] w-full">
+      <Bar data={{ labels, datasets }} options={options as any} />
+    </div>
+  );
+};
+
+const CategoryDoughnut = ({ labels, data, colors }: any) => {
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        data,
+        backgroundColor: colors,
+        hoverBackgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 15,
+        borderRadius: 4,
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '82%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        titleColor: '#000',
+        titleFont: { size: 12, weight: 900, family: 'Inter' },
+        bodyColor: '#666',
+        bodyFont: { size: 11, weight: 600, family: 'Inter' },
+        padding: 16,
+        boxPadding: 8,
+        usePointStyle: true,
+        borderColor: 'rgba(0, 0, 0, 0.05)',
+        borderWidth: 1,
+        callbacks: {
+          label: (context: any) => {
+            const label = context.label || '';
+            const value = context.parsed;
+            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: ฿${value.toLocaleString()} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="relative h-[320px] w-full flex items-center justify-center">
+      <Doughnut data={chartData} options={options as any} />
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Outflow</p>
+        <p className="text-3xl font-black text-text-primary tracking-tighter mt-1">
+          ฿{data.reduce((a: number, b: number) => a + b, 0).toLocaleString()}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const LegendCarousel = ({ labels, values, colors }: any) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
+  const itemsPerPage = 4;
+  const totalPages = Math.ceil(labels.length / itemsPerPage);
+  const totalValue = values.reduce((a: number, b: number) => a + b, 0) || 1;
+
+  const handleScroll = () => {
+    if (containerRef.current) {
+      const { scrollLeft, offsetWidth } = containerRef.current;
+      const newPage = Math.round(scrollLeft / offsetWidth);
+      if (newPage !== page) setPage(newPage);
+    }
+  };
+
+  const scrollToPage = (p: number) => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        left: p * containerRef.current.offsetWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="mt-4 flex flex-col items-center flex-1 w-full relative group">
+      {/* Navigation Arrows */}
+      {totalPages > 1 && (
+        <>
+          <button 
+            onClick={() => scrollToPage(page - 1)}
+            className={`absolute -left-2 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-bg-surface border border-border-subtle shadow-architectural transition-all duration-300 ${page === 0 ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 hover:scale-110 active:scale-95'}`}
+          >
+            <ChevronLeft className="w-4 h-4 text-text-primary" />
+          </button>
+          <button 
+            onClick={() => scrollToPage(page + 1)}
+            className={`absolute -right-2 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-bg-surface border border-border-subtle shadow-architectural transition-all duration-300 ${page === totalPages - 1 ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 hover:scale-110 active:scale-95'}`}
+          >
+            <ChevronRight className="w-4 h-4 text-text-primary" />
+          </button>
+        </>
+      )}
+
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="w-full flex overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth h-[180px] px-2"
+      >
+        {Array.from({ length: totalPages }).map((_, pIdx) => (
+          <div key={pIdx} className="w-full flex-shrink-0 snap-start grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
+            {labels.slice(pIdx * itemsPerPage, (pIdx + 1) * itemsPerPage).map((label: string, index: number) => {
+              const actualIdx = pIdx * itemsPerPage + index;
+              return (
+                <div key={label} className="flex items-center gap-3 p-4 bg-bg-main/30 rounded-2xl border border-border-subtle/50 h-[76px] transition-transform duration-300">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors[actualIdx] }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-text-primary uppercase tracking-tighter truncate">{label}</p>
+                    <p className="text-[11px] font-bold text-text-muted mt-0.5">
+                      {((values[actualIdx] / totalValue) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Pad the last page if needed */}
+            {labels.slice(pIdx * itemsPerPage, (pIdx + 1) * itemsPerPage).length < itemsPerPage && 
+              Array.from({ length: itemsPerPage - labels.slice(pIdx * itemsPerPage, (pIdx + 1) * itemsPerPage).length }).map((_, i) => (
+                <div key={`empty-${i}`} className="opacity-0 pointer-events-none p-4 h-[76px]" />
+              ))
+            }
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };
@@ -280,7 +517,6 @@ const Dashboard: React.FC = () => {
       .reduce((acc, txn) => acc + Number(txn.amount), 0);
 
     const categorySpending = filteredTxns
-      .filter(txn => txn.type === 'expense')
       .reduce((acc: any, txn) => {
         const catName = txn.categories?.name || "Other";
         acc[catName] = (acc[catName] || 0) + Number(txn.amount);
@@ -321,24 +557,123 @@ const Dashboard: React.FC = () => {
         .reduce((acc, txn) => acc + Number(txn.amount), 0);
     });
 
-    const allExpenseCategories = categories.filter(c => c.type === 'expense');
-    
-    const sectorLabels = allExpenseCategories
+    const allCategories = categories;
+
+    const sectorLabels = allCategories
       .filter(cat => visibleCategories.includes(cat.id))
-      .sort((a, b) => (categorySpending[b.name] || 0) - (categorySpending[a.name] || 0))
+      .sort((a, b) => {
+        // Income first, then by spending volume
+        if (a.type !== b.type) return a.type === 'income' ? -1 : 1;
+        return (categorySpending[b.name] || 0) - (categorySpending[a.name] || 0);
+      })
       .map(cat => cat.name);
 
     const sectorValues = sectorLabels.map(label => categorySpending[label] || 0);
-    const sectorLimits = sectorLabels.map(label =>
-      categories.find((c: any) => c.name === label)?.monthly_limit || (monthlyIncome * 0.2)
-    );
+    const sectorTypes = sectorLabels.map(label => categories.find((c: any) => c.name === label)?.type || 'expense');
+    const sectorLimits = sectorLabels.map(label => {
+      const cat = categories.find((c: any) => c.name === label);
+      return cat?.type === 'income' ? 0 : (cat?.monthly_limit || (monthlyIncome * 0.2));
+    });
+
+    // --- Stacked Data Calculation ---
+    const getDaysInRange = () => {
+      const days = [];
+      if (filterType === 'month') {
+        const [year, month] = selectedMonth.split('-').map(Number);
+        const lastDay = new Date(year, month, 0).getDate();
+        for (let i = 1; i <= lastDay; i++) {
+          days.push(`${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
+        }
+      } else {
+        const start = new Date(startDate || new Date().toISOString().split('T')[0]);
+        const end = new Date(endDate || new Date().toISOString().split('T')[0]);
+        const curr = new Date(start);
+        while (curr <= end) {
+          days.push(curr.toISOString().split('T')[0]);
+          curr.setDate(curr.getDate() + 1);
+        }
+      }
+      return days;
+    };
+
+    const timelineDays = getDaysInRange();
+    const timelineLabels = timelineDays.map(d => {
+      const date = new Date(d);
+      return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    });
+
+    const INCOME_COLORS = [
+      '#10b981', // Emerald Primary
+      '#34d399', // Soft Emerald
+      '#6ee7b7', // Mint
+      '#059669', // Deep Emerald
+      '#a7f3d0'  // Pale Mint
+    ];
+    const EXPENSE_COLORS = [
+      '#fb7185', // Soft Rose
+      '#fda4af', // Light Rose
+      '#f43f5e', // Vibrant Rose
+      '#e11d48', // Deep Rose
+      '#fff1f2'  // Blushed White
+    ];
+
+    const DOUGHNUT_PALETTE = [
+      '#fb7185', // Rose
+      '#818cf8', // Indigo
+      '#2dd4bf', // Teal
+      '#fbbf24', // Amber
+      '#a78bfa', // Violet
+      '#94a3b8', // Slate
+      '#f472b6', // Pink
+    ];
+
+    let incomeIdx = 0;
+    let expenseIdx = 0;
+
+    const stackedDatasets = sectorLabels.map((catName) => {
+      const cat = categories.find((c: any) => c.name === catName);
+      const isIncome = cat?.type === 'income';
+
+      const backgroundColor = isIncome
+        ? INCOME_COLORS[incomeIdx++ % INCOME_COLORS.length]
+        : EXPENSE_COLORS[expenseIdx++ % EXPENSE_COLORS.length];
+
+      return {
+        label: catName,
+        categoryType: cat?.type || 'expense',
+        data: timelineDays.map(day => {
+          return filteredTxns
+            .filter(txn => txn.transaction_date === day && txn.categories?.name === catName)
+            .reduce((sum, txn) => sum + Number(txn.amount), 0);
+        }),
+        backgroundColor,
+        borderRadius: 4,
+      };
+    });
+
     const totalFlow = monthlyIncome + monthlyExpenses;
     const incomeRatio = totalFlow > 0 ? (monthlyIncome / totalFlow) * 100 : 50;
 
     return {
       netBalance, monthlyIncome, monthlyExpenses, categorySpending,
       sparklineData, sparklineLabels, pulseData, pulseLabels,
-      sectorLabels, sectorValues, sectorLimits, incomeRatio,
+      sectorLabels, sectorValues, sectorLimits, sectorTypes, incomeRatio,
+      timelineLabels, stackedDatasets,
+      ...(() => {
+        const sorted = allCategories
+          .filter(c => c.type === 'expense')
+          .sort((a, b) => {
+            const valA = categorySpending[a.name] || 0;
+            const valB = categorySpending[b.name] || 0;
+            if (valB !== valA) return valB - valA;
+            return a.name.localeCompare(b.name);
+          });
+        return {
+          doughnutLabels: sorted.map(c => c.name),
+          doughnutValues: sorted.map(c => categorySpending[c.name] || 0),
+          doughnutColors: sorted.map((_, i) => DOUGHNUT_PALETTE[i % DOUGHNUT_PALETTE.length]),
+        };
+      })(),
       filteredTxns: [...filteredTxns].sort((a, b) =>
         new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
       )
@@ -446,53 +781,110 @@ const Dashboard: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row xl:flex-col gap-6 w-full xl:w-auto">
           <div className="bg-white dark:bg-bg-surface p-8 rounded-[40px] flex-1 xl:w-64 border border-border-subtle">
-            <p className="text-[10px] font-black text-text-muted uppercase mb-3">Income</p>
+            <p className="text-[10px] font-black text-brand-emerald uppercase mb-3">Income</p>
             <h4 className="text-3xl font-black text-text-primary">฿{stats.monthlyIncome.toLocaleString()}</h4>
           </div>
           <div className="bg-white dark:bg-bg-surface p-8 rounded-[40px] flex-1 xl:w-64 border border-border-subtle">
-            <p className="text-[10px] font-black text-text-muted uppercase mb-3">Expenses</p>
+            <p className="text-[10px] font-black text-[#f43f5e] uppercase mb-3">Expenses</p>
             <h4 className="text-3xl font-black text-text-primary">฿{stats.monthlyExpenses.toLocaleString()}</h4>
           </div>
         </div>
       </section>
 
+      {/* Consumption Flow (Stacked Graph) */}
+      <section>
+        <div className="flex items-center gap-3 mb-8 px-2">
+          <h3 className="text-2xl font-black text-text-primary tracking-tighter">Consumption Flow</h3>
+          <div className="h-px flex-1 bg-border-subtle/50" />
+          <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Aggregate Velocity</p>
+        </div>
+        <div className="bg-bg-surface rounded-[40px] border border-border-subtle p-10 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+            <Landmark className="w-64 h-64" />
+          </div>
+          <div className="relative z-10">
+            <div className="flex justify-between items-end mb-10">
+              <div>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Temporal Distribution</p>
+                <h4 className="text-3xl font-black text-text-primary tracking-tighter mt-1">Daily Sector Volume</h4>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Peak Outflow</p>
+                <p className="text-xl font-black text-brand-emerald mt-1">
+                  ฿{Math.max(...stats.stackedDatasets.map((ds: any) => Math.max(...ds.data))).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <CategoryStackFlow
+              labels={stats.timelineLabels}
+              datasets={stats.stackedDatasets}
+            />
+          </div>
+        </div>
+      </section>
+
+
       {/* Main Content Sections */}
-      <div className="space-y-10">
-        {/* Row 1: Recent Activity (Full Width) */}
-        <section>
-          <div className="flex justify-between items-center mb-8 px-2">
-            <h3 className="text-2xl font-black text-text-primary tracking-tighter">Recent Activity</h3>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/transactions', { state: { filterType, selectedMonth, startDate, endDate } })}
-                className="text-[10px] font-bold text-text-muted hover:text-brand-emerald uppercase tracking-[0.2em] transition-colors"
-              >
-                View All
-              </button>
-              <button onClick={openAddModal} className="bg-brand-emerald text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all">
-                <Plus className="w-3.5 h-3.5 inline mr-1.5" /> New Entry
-              </button>
+      <div className="space-y-12">
+        {/* Distribution & Activity Split */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Left: Distribution Doughnut */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="flex items-center gap-3 px-2">
+              <h3 className="text-2xl font-black text-text-primary tracking-tighter">Sector Split</h3>
+              <div className="h-px flex-1 bg-border-subtle/50" />
+            </div>
+            <div className="bg-bg-surface rounded-[40px] border border-border-subtle p-10 shadow-sm relative overflow-hidden h-[600px] flex flex-col justify-between">
+              <CategoryDoughnut 
+                labels={stats.doughnutLabels}
+                data={stats.doughnutValues}
+                colors={stats.doughnutColors}
+              />
+              <LegendCarousel 
+                labels={stats.doughnutLabels}
+                data={stats.doughnutValues}
+                values={stats.doughnutValues}
+                colors={stats.doughnutColors}
+              />
             </div>
           </div>
-          <div className="bg-bg-surface rounded-[40px] border border-border-subtle p-8 h-[500px] overflow-y-auto scrollbar-hide shadow-sm">
-            {recentTransactions.length > 0 ? recentTransactions.map(txn => (
-              <TransactionItem
-                key={txn.id}
-                icon={getCategoryIcon(txn.categories?.name || "")}
-                title={txn.categories?.name || "Unclassified"}
-                category={txn.categories?.name || "Misc"}
-                time={new Date(txn.transaction_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                amount={txn.amount}
-                isPositive={txn.type === 'income'}
-                status="Verified"
-              />
-            )) : (
-              <div className="h-full flex flex-col items-center justify-center text-text-muted opacity-50">
-                <p className="text-sm font-bold uppercase tracking-widest">No Recent Activity</p>
+
+          {/* Right: Recent Activity */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="flex justify-between items-center px-2">
+              <h3 className="text-2xl font-black text-text-primary tracking-tighter">Recent Activity</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate('/transactions', { state: { filterType, selectedMonth, startDate, endDate } })}
+                  className="text-[10px] font-bold text-text-muted hover:text-brand-emerald uppercase tracking-[0.2em] transition-colors"
+                >
+                  View All
+                </button>
+                <button onClick={openAddModal} className="bg-brand-emerald text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                  <Plus className="w-3.5 h-3.5 inline mr-1.5" /> New Entry
+                </button>
               </div>
-            )}
+            </div>
+            <div className="bg-bg-surface rounded-[40px] border border-border-subtle p-8 h-[600px] overflow-y-auto scrollbar-hide shadow-sm">
+              {recentTransactions.length > 0 ? recentTransactions.map(txn => (
+                <TransactionItem
+                  key={txn.id}
+                  icon={getCategoryIcon(txn.categories?.name || "")}
+                  title={txn.categories?.name || "Unclassified"}
+                  category={txn.categories?.name || "Misc"}
+                  time={new Date(txn.transaction_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  amount={txn.amount}
+                  isPositive={txn.type === 'income'}
+                  status="Verified"
+                />
+              )) : (
+                <div className="h-full flex flex-col items-center justify-center text-text-muted opacity-50">
+                  <p className="text-sm font-bold uppercase tracking-widest">No Recent Activity</p>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
+        </div>
 
         {/* Row 2: Sector Health (Full Width) */}
         <section>
@@ -528,6 +920,7 @@ const Dashboard: React.FC = () => {
                     labels={stats.sectorLabels}
                     values={stats.sectorValues}
                     limits={stats.sectorLimits}
+                    types={stats.sectorTypes}
                   />
                 </div>
 

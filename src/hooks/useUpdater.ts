@@ -11,6 +11,8 @@ interface UpdateInfo {
   date?: string;
 }
 
+const isTauri = () => typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__;
+
 export const useUpdater = () => {
   const [status, setStatus] = useState<UpdateStatus>('idle');
   const [currentVersion, setCurrentVersion] = useState<string>('');
@@ -19,6 +21,10 @@ export const useUpdater = () => {
   const [manifest, setManifest] = useState<any>(null);
 
   const fetchVersion = useCallback(async () => {
+    if (!isTauri()) {
+      setCurrentVersion('0.0.0 (Web)');
+      return;
+    }
     try {
       const v = await getVersion();
       setCurrentVersion(v);
@@ -28,6 +34,10 @@ export const useUpdater = () => {
   }, []);
 
   const checkForUpdates = useCallback(async (isManual = false) => {
+    if (!isTauri()) {
+      setStatus(isManual ? 'uptodate' : 'idle');
+      return false;
+    }
     setStatus('checking');
     setError(null);
     try {
